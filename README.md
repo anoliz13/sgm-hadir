@@ -504,6 +504,6 @@ VITE_USE_EMULATORS=false
 
 ## Lisensi
 
-Hak Cipta © 2026 PT Salut Gajah Mada. Semua hak dilindungi.
+Hak Cipta © 2026 Imam Nur. Semua hak dilindungi.
 
 Aplikasi ini dikembangkan untuk keperluan internal perusahaan. Dilarang mendistribusikan atau menggunakan tanpa izin tertulis.
