@@ -1,0 +1,188 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ==================== HELPER FUNCTIONS ====================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    function getUserRole() {
+      return getUserData().role;
+    }
+    
+    function isSuperAdmin() {
+      return isAuthenticated() && getUserRole() == 'SUPER_ADMIN';
+    }
+    
+    function isSupervisorOrAbove() {
+      return isAuthenticated() && getUserRole() in ['SUPER_ADMIN', 'SUPERVISOR'];
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isSupervisorOfBranch(branchId) {
+      return isAuthenticated() 
+        && getUserRole() == 'SUPERVISOR' 
+        && branchId in getUserData().supervisorBranchIds;
+    }
+    
+    // ==================== USERS ====================
+    match /users/{userId} {
+      // Karyawan bisa baca profil sendiri
+      // Supervisor bisa baca karyawan di cabangnya
+      // Super Admin bisa baca semua
+      allow read: if isAuthenticated() && (
+        isOwner(userId) || 
+        isSuperAdmin() || 
+        isSupervisorOfBranch(resource.data.branchId)
+      );
+      
+      // Hanya super admin & supervisor yang bisa create/update
+      // Karyawan bisa update field tertentu (fcmTokens, photoUrl)
+      allow create: if isSupervisorOrAbove();
+      allow update: if isSuperAdmin() || 
+        isSupervisorOfBranch(resource.data.branchId) ||
+        (isOwner(userId) && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['fcmTokens', 'photoUrl', 'updatedAt']));
+      allow delete: if isSuperAdmin();
+    }
+    
+    // ==================== BRANCHES ====================
+    match /branches/{branchId} {
+      allow read: if isAuthenticated();
+      allow write: if isSuperAdmin();
+    }
+    
+    // ==================== ATTENDANCES ====================
+    match /attendances/{attendanceId} {
+      // Karyawan bisa baca absensi sendiri
+      // Supervisor bisa baca absensi cabangnya
+      // Super Admin bisa baca semua
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        isSuperAdmin() ||
+        isSupervisorOfBranch(resource.data.branchId)
+      );
+      
+      // Hanya Cloud Functions yang bisa create (via admin SDK)
+      // Admin bisa update untuk edit manual
+      allow create: if false; // Handled by Cloud Functions
+      allow update: if isSupervisorOrAbove();
+      allow delete: if isSuperAdmin();
+    }
+    
+    // ==================== OVERTIME REQUESTS ====================
+    match /overtime_requests/{requestId} {
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        isSuperAdmin() ||
+        isSupervisorOfBranch(resource.data.branchId)
+      );
+      
+      // Karyawan bisa create pengajuan sendiri
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      
+      // Supervisor bisa approve/reject, karyawan bisa cancel
+      allow update: if isAuthenticated() && (
+        isSuperAdmin() ||
+        isSupervisorOfBranch(resource.data.branchId) ||
+        (isOwner(resource.data.userId) && 
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt']) &&
+          request.resource.data.status == 'CANCELLED')
+      );
+      
+      allow delete: if isSuperAdmin();
+    }
+    
+    // ==================== LEAVE REQUESTS ====================
+    match /leave_requests/{requestId} {
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        isSuperAdmin() ||
+        isSupervisorOfBranch(resource.data.branchId)
+      );
+      
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      
+      allow update: if isAuthenticated() && (
+        isSuperAdmin() ||
+        isSupervisorOfBranch(resource.data.branchId) ||
+        (isOwner(resource.data.userId) && 
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt']) &&
+          request.resource.data.status == 'CANCELLED')
+      );
+      
+      allow delete: if isSuperAdmin();
+    }
+    
+    // ==================== LEAVE TYPES ====================
+    match /leave_types/{typeId} {
+      allow read: if isAuthenticated();
+      allow write: if isSuperAdmin();
+    }
+    
+    // ==================== VISITS ====================
+    match /visits/{visitId} {
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        isSuperAdmin() ||
+        isSupervisorOfBranch(resource.data.branchId)
+      );
+      
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      
+      // Admin bisa verifikasi
+      allow update: if isSupervisorOrAbove();
+      allow delete: if isSuperAdmin();
+    }
+    
+    // ==================== HOLIDAYS ====================
+    match /holidays/{holidayId} {
+      allow read: if isAuthenticated();
+      allow write: if isSuperAdmin();
+    }
+    
+    // ==================== TEMP ASSIGNMENTS ====================
+    match /temp_assignments/{assignmentId} {
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        isSuperAdmin() ||
+        isSupervisorOfBranch(resource.data.fromBranchId) ||
+        isSupervisorOfBranch(resource.data.toBranchId)
+      );
+      
+      allow write: if isSupervisorOrAbove();
+    }
+    
+    // ==================== APPROVAL LOGS ====================
+    match /approval_logs/{logId} {
+      allow read: if isSupervisorOrAbove();
+      allow create: if isSupervisorOrAbove();
+      allow update, delete: if false;
+    }
+    
+    // ==================== SYSTEM LOGS ====================
+    match /system_logs/{logId} {
+      allow read: if isSuperAdmin();
+      allow create: if isSupervisorOrAbove();
+      allow update, delete: if false;
+    }
+    
+    // ==================== RECAP SNAPSHOTS ====================
+    match /recap_snapshots/{snapshotId} {
+      allow read: if isSupervisorOrAbove();
+      allow write: if isSupervisorOrAbove();
+    }
+  }
+}

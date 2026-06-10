@@ -1,0 +1,47 @@
+# Flutter
+sgm_hadir_mobile/.dart_tool/
+sgm_hadir_mobile/.packages
+sgm_hadir_mobile/.pub/
+sgm_hadir_mobile/build/
+sgm_hadir_mobile/.flutter-plugins
+sgm_hadir_mobile/.flutter-plugins-dependencies
+sgm_hadir_mobile/pubspec.lock
+sgm_hadir_mobile/**.iml
+sgm_hadir_mobile/.idea/
+sgm_hadir_mobile/.metadata
+sgm_hadir_mobile/android/.gradle/
+sgm_hadir_mobile/android/local.properties
+sgm_hadir_mobile/android/key.properties
+sgm_hadir_mobile/android/app/build/
+sgm_hadir_mobile/ios/Pods/
+sgm_hadir_mobile/ios/.symlinks/
+sgm_hadir_mobile/ios/Flutter/Flutter.framework
+sgm_hadir_mobile/ios/Flutter/Flutter.podspec
+sgm_hadir_mobile/**.mocks.dart
+sgm_hadir_mobile/coverage/
+
+# Go backend
+backend/tmp/
+backend/vendor/
+backend/*.exe
+backend/*.exe~
+backend/Detail_Absensi_*.xlsx
+backend/firebase-adminsdk.json
+
+# Node / Vite admin
+sgm_hadir_admin/node_modules/
+sgm_hadir_admin/dist/
+sgm_hadir_admin/.env
+sgm_hadir_admin/.env.local
+
+# Firebase
+firebase/functions/node_modules/
+firebase/functions/lib/
+
+# General
+.DS_Store
+Thumbs.db
+*.log
+.env
+.env.local
+uploads/

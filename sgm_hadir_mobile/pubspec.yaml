@@ -1,0 +1,95 @@
+name: sgm_hadir_mobile
+description: SGM Hadir - Aplikasi Absensi Karyawan PT Salut Gajah Mada
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # Networking
+  dio: ^5.7.0
+  jwt_decoder: ^2.0.1
+  
+  # QR Scanner
+  mobile_scanner: ^6.0.2
+
+  # State Management
+  flutter_bloc: ^9.1.1
+  equatable: ^2.0.0
+  
+  # Navigation
+  go_router: ^17.3.0
+  
+  # Maps & Location
+  google_maps_flutter: ^2.10.0
+  geolocator: ^14.0.2
+  geocoding: ^4.0.0
+  
+  # Camera & Media
+  camera: ^0.12.0+1
+  image_picker: ^1.1.0
+  cached_network_image: ^3.4.0
+  
+  # UI
+  intl: ^0.20.2
+  table_calendar: ^3.1.0
+  fl_chart: ^1.2.0
+  shimmer: ^3.0.0
+  
+  # Firebase
+  firebase_core: ^3.0.0
+  firebase_messaging: ^15.0.0
+  flutter_local_notifications: ^17.0.0
+
+  # Utilities
+  permission_handler: ^12.0.3
+  path_provider: ^2.1.0
+  shared_preferences: ^2.3.0
+  url_launcher: ^6.3.0
+  
+  # Code Generation
+  json_annotation: ^4.9.0
+  freezed_annotation: ^3.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  build_runner: ^2.4.0
+  json_serializable: ^6.8.0
+  freezed: ^3.2.5
+  flutter_launcher_icons: ^0.14.3
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: false
+  image_path: "assets/icon/app_icon.png"
+  min_sdk_android: 21
+  web:
+    generate: false
+
+flutter:
+  uses-material-design: true
+  
+  # assets:
+  #   - assets/images/
+  
+  # fonts:
+  #   - family: Inter
+  #     fonts:
+  #       - asset: assets/fonts/Inter-Regular.ttf
+  #         weight: 400
+  #       - asset: assets/fonts/Inter-Medium.ttf
+  #         weight: 500
+  #       - asset: assets/fonts/Inter-SemiBold.ttf
+  #         weight: 600
+  #       - asset: assets/fonts/Inter-Bold.ttf
+  #         weight: 700
+  #       - asset: assets/fonts/Inter-ExtraBold.ttf
+  #         weight: 800
