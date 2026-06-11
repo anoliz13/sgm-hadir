@@ -166,6 +166,11 @@ func (s *OvertimeService) UpdateStatus(id uuid.UUID, approverID uuid.UUID, req d
 }
 
 func (s *OvertimeService) sendOvertimeStatusNotification(overtime *model.OvertimeRequest, status string) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("[PANIC] sendOvertimeStatusNotification recovered: %v", r)
+		}
+	}()
 	var user model.User
 	if err := s.db.Select("fcm_token, name").Where("id = ?", overtime.UserID).First(&user).Error; err != nil {
 		return

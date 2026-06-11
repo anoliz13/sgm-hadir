@@ -229,7 +229,12 @@ export default function BranchManagementPage() {
                 </div>
               </div>
             ))
-          : branches.map((branch) => (
+          : branches.length === 0 ? (
+              <div style={{ gridColumn: "1 / -1", padding: "40px", textAlign: "center", color: "var(--color-text-muted)" }}>
+                <p style={{ fontSize: "1rem" }}>Belum ada cabang terdaftar</p>
+                <p style={{ fontSize: "0.85rem", marginTop: "8px" }}>Klik "Tambah Cabang" untuk menambahkan cabang baru</p>
+              </div>
+            ) : branches.map((branch) => (
               <div key={branch.id} className="card">
                 <div className="card-body">
                   <div

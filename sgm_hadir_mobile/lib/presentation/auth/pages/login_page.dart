@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_strings.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
@@ -262,7 +263,12 @@ class _LoginPageState extends State<LoginPage>
                                 alignment: Alignment.centerRight,
                                 child: TextButton(
                                   onPressed: () {
-                                    // TODO: Navigate to forgot password
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Hubungi Supervisor / Kepala Salut untuk reset password'),
+                                        behavior: SnackBarBehavior.floating,
+                                      ),
+                                    );
                                   },
                                   child: const Text(
                                     'Lupa password?',
@@ -319,7 +325,7 @@ class _LoginPageState extends State<LoginPage>
                   Padding(
                     padding: const EdgeInsets.only(bottom: 16, top: 4),
                     child: Text(
-                      'copyright Imam Nur v.01',
+                      AppStrings.copyright,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.5),
                         fontSize: 11,

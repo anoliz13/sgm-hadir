@@ -43,6 +43,7 @@ export default function LeaveApprovalPage() {
   );
   const [approverNote, setApproverNote] = useState("");
   const [processing, setProcessing] = useState(false);
+  const [attachmentError, setAttachmentError] = useState(false);
 
   useEffect(() => {
     fetchLeaves();
@@ -70,6 +71,7 @@ export default function LeaveApprovalPage() {
     setSelectedLeave(leave);
     setActionType(action);
     setApproverNote("");
+    setAttachmentError(false);
     setShowModal(true);
   };
 
@@ -353,17 +355,28 @@ export default function LeaveApprovalPage() {
                     <div style={{ marginBottom: "16px" }}>
                       <div style={{ fontWeight: 600, marginBottom: "8px", fontSize: "0.9rem" }}>Lampiran / Bukti</div>
                       <div style={{ border: "1px solid var(--color-border-light)", borderRadius: "8px", overflow: "hidden" }}>
-                        <img 
-                          src={selectedLeave.attachment_url.startsWith('http') ? selectedLeave.attachment_url : `http://localhost:8080${selectedLeave.attachment_url}`} 
-                          alt="Lampiran" 
-                          style={{ width: "100%", maxHeight: "300px", objectFit: "contain", background: "#f8f9fa", display: "block" }} 
-                          onError={(e) => {
-                            // Fallback if image fails to load
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                            target.parentElement!.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--color-text-muted)"><p>Gagal memuat gambar atau file bukan gambar.</p><a href="${selectedLeave.attachment_url}" target="_blank" class="btn btn-primary" style="margin-top: 10px; display: inline-flex"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Buka File Lampiran</a></div>`;
-                          }}
-                        />
+                        {attachmentError ? (
+                          <div style={{ padding: "20px", textAlign: "center", color: "var(--color-text-muted)" }}>
+                            <p>Gagal memuat gambar atau file bukan gambar.</p>
+                            <a
+                              href={selectedLeave.attachment_url.startsWith('http') ? selectedLeave.attachment_url : `http://localhost:8080${selectedLeave.attachment_url}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="btn btn-primary"
+                              style={{ marginTop: "10px", display: "inline-flex", alignItems: "center", gap: "8px" }}
+                            >
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                              Buka File Lampiran
+                            </a>
+                          </div>
+                        ) : (
+                          <img
+                            src={selectedLeave.attachment_url.startsWith('http') ? selectedLeave.attachment_url : `http://localhost:8080${selectedLeave.attachment_url}`}
+                            alt="Lampiran"
+                            style={{ width: "100%", maxHeight: "300px", objectFit: "contain", background: "#f8f9fa", display: "block" }}
+                            onError={() => setAttachmentError(true)}
+                          />
+                        )}
                         <div style={{ padding: "10px", background: "#fff", borderTop: "1px solid var(--color-border-light)", textAlign: "center" }}>
                           <a href={selectedLeave.attachment_url.startsWith('http') ? selectedLeave.attachment_url : `http://localhost:8080${selectedLeave.attachment_url}`} target="_blank" rel="noreferrer" className="text-primary" style={{ fontWeight: 500, textDecoration: "none" }}>
                             Buka Lampiran di Tab Baru

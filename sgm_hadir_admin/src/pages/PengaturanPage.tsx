@@ -25,18 +25,22 @@ export default function PengaturanPage() {
   const [groupSettings, setGroupSettings] = useState<Setting[]>([]);
 
   useEffect(() => {
-    api.get("/admin/settings").then(res => {
+    const ctrl = new AbortController();
+    api.get("/admin/settings", { signal: ctrl.signal }).then(res => {
       const all: Setting[] = res.data.data || [];
       const map: Record<string, string> = {};
       all.forEach(s => { map[s.key] = s.value; });
       setSettings(map);
     }).catch(() => toast.error("Gagal memuat pengaturan")).finally(() => setLoading(false));
+    return () => ctrl.abort();
   }, []);
 
   useEffect(() => {
-    api.get(`/admin/settings/group/${activeGroup}`).then(res => {
+    const ctrl = new AbortController();
+    api.get(`/admin/settings/group/${activeGroup}`, { signal: ctrl.signal }).then(res => {
       setGroupSettings(res.data.data || []);
     }).catch(() => {});
+    return () => ctrl.abort();
   }, [activeGroup]);
 
   const handleChange = (key: string, value: string) => {
@@ -139,7 +143,11 @@ export default function PengaturanPage() {
             </div>
           </div>
           <div className="card-body" style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-            {groupSettings.map(s => (
+            {groupSettings.length === 0 ? (
+              <div style={{ padding: "20px", textAlign: "center", color: "var(--color-text-muted)", fontSize: "0.85rem" }}>
+                Tidak ada pengaturan di grup ini
+              </div>
+            ) : groupSettings.map(s => (
               <div key={s.key} style={{ display: "grid", gridTemplateColumns: "1fr 1.5fr", gap: "16px", alignItems: "start" }}>
                 <div>
                   <label style={{ fontWeight: 500, fontSize: "0.875rem", color: "var(--color-text-primary)", display: "block" }}>{s.label}</label>

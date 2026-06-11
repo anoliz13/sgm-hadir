@@ -6,11 +6,13 @@ import React, { useState } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import Sidebar from "./Sidebar";
+import { useFcmToken } from "../../hooks/useFcmToken";
 import { Loader2 } from "lucide-react";
 
 export default function DashboardLayout() {
   const { userData, loading } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  useFcmToken();
 
   if (loading) {
     return (

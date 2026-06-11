@@ -4,10 +4,17 @@ import (
 	"fmt"
 	"net/http"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 )
+
+var allowedExtensions = map[string]bool{
+	".jpg": true, ".jpeg": true, ".png": true, ".gif": true, ".webp": true,
+}
+
+const maxUploadSize int64 = 5 << 20
 
 type UploadHandler struct{}
 
@@ -18,26 +25,34 @@ func NewUploadHandler() *UploadHandler {
 func (h *UploadHandler) UploadFile(c *gin.Context) {
 	file, err := c.FormFile("file")
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "Failed to upload file"})
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "Gagal membaca file"})
 		return
 	}
 
-	// Create uploads directory if it doesn't exist
-	// We'll just save it to a local folder named "uploads"
+	if file.Size > maxUploadSize {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "Ukuran file maksimal 5MB"})
+		return
+	}
+
+	ext := strings.ToLower(filepath.Ext(file.Filename))
+	if !allowedExtensions[ext] {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "Tipe file tidak diizinkan. Gunakan JPG, PNG, GIF, atau WebP"})
+		return
+	}
+
 	filename := fmt.Sprintf("%d_%s", time.Now().Unix(), filepath.Base(file.Filename))
 	savePath := filepath.Join("uploads", filename)
 
 	if err := c.SaveUploadedFile(file, savePath); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": "Failed to save file"})
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": "Gagal menyimpan file"})
 		return
 	}
 
-	// Return the relative URL (can be accessed via static file server)
 	fileUrl := fmt.Sprintf("/uploads/%s", filename)
 
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
-		"message": "File uploaded successfully",
+		"message": "File berhasil diunggah",
 		"data": map[string]string{
 			"url": fileUrl,
 		},

@@ -65,6 +65,11 @@ func (s *NotificationService) SendBulk(userIDs []string, title, body string, dat
 
 // SendCheckInReminder sends reminder to employees who haven't checked in today.
 func (s *NotificationService) SendCheckInReminder() {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("[PANIC] SendCheckInReminder recovered: %v", r)
+		}
+	}()
 	now := time.Now()
 	if !s.isWorkingDay(now) {
 		log.Println("[FCM] Today is not a working day, skipping check-in reminder")
@@ -98,6 +103,11 @@ func (s *NotificationService) SendCheckInReminder() {
 
 // SendCheckOutReminder sends reminder to employees who checked in but haven't checked out.
 func (s *NotificationService) SendCheckOutReminder() {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("[PANIC] SendCheckOutReminder recovered: %v", r)
+		}
+	}()
 	now := time.Now()
 	if !s.isWorkingDay(now) {
 		return
@@ -141,6 +151,11 @@ func (s *NotificationService) SendCheckOutReminder() {
 
 // NotifyAdmins sends FCM to all admin/supervisor users, checking the given setting key first.
 func NotifyAdmins(db *gorm.DB, settingKey, title, body string, data map[string]string) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("[PANIC] NotifyAdmins recovered: %v", r)
+		}
+	}()
 	if settingKey != "" {
 		var setting model.AppSetting
 		if err := db.Where("key = ?", settingKey).First(&setting).Error; err != nil || setting.Value != "true" {
@@ -175,6 +190,11 @@ func NotifyAdmins(db *gorm.DB, settingKey, title, body string, data map[string]s
 // AutoCheckOutAll performs automatic check-out for employees who checked in but
 // haven't checked out by end of day. Skips GPS radius validation since they may be at home.
 func (s *NotificationService) AutoCheckOutAll() {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("[PANIC] AutoCheckOutAll recovered: %v", r)
+		}
+	}()
 	now := time.Now()
 	if !s.isWorkingDay(now) {
 		log.Println("[FCM] Today is not a working day, skipping auto check-out")

@@ -11,8 +11,9 @@ import (
 )
 
 var (
-	ErrInvalidToken = errors.New("invalid token")
-	ErrExpiredToken = errors.New("token has expired")
+	ErrInvalidToken     = errors.New("invalid token")
+	ErrExpiredToken     = errors.New("token has expired")
+	ErrMissingSecret    = errors.New("JWT_SECRET environment variable is not set")
 )
 
 type JWTClaim struct {
@@ -23,16 +24,21 @@ type JWTClaim struct {
 	jwt.RegisteredClaims
 }
 
-func getSecret() []byte {
+func getSecret() ([]byte, error) {
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
-		secret = "super-secret-jwt-key-change-this-in-production"
+		return nil, ErrMissingSecret
 	}
-	return []byte(secret)
+	return []byte(secret), nil
 }
 
 // GenerateTokens generates both access and refresh tokens
 func GenerateTokens(userID uuid.UUID, role string, branchID ...*uuid.UUID) (string, string, error) {
+	secret, err := getSecret()
+	if err != nil {
+		return "", "", err
+	}
+
 	var bid *uuid.UUID
 	if len(branchID) > 0 {
 		bid = branchID[0]
@@ -61,7 +67,7 @@ func GenerateTokens(userID uuid.UUID, role string, branchID ...*uuid.UUID) (stri
 		},
 	}
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims)
-	accessTokenString, err := accessToken.SignedString(getSecret())
+	accessTokenString, err := accessToken.SignedString(secret)
 	if err != nil {
 		return "", "", err
 	}
@@ -78,7 +84,7 @@ func GenerateTokens(userID uuid.UUID, role string, branchID ...*uuid.UUID) (stri
 		},
 	}
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
-	refreshTokenString, err := refreshToken.SignedString(getSecret())
+	refreshTokenString, err := refreshToken.SignedString(secret)
 	if err != nil {
 		return "", "", err
 	}
@@ -88,11 +94,16 @@ func GenerateTokens(userID uuid.UUID, role string, branchID ...*uuid.UUID) (stri
 
 // ValidateToken parses and validates a JWT token
 func ValidateToken(signedToken string) (*JWTClaim, error) {
+	secret, err := getSecret()
+	if err != nil {
+		return nil, err
+	}
+
 	token, err := jwt.ParseWithClaims(
 		signedToken,
 		&JWTClaim{},
 		func(token *jwt.Token) (interface{}, error) {
-			return getSecret(), nil
+			return secret, nil
 		},
 	)
 

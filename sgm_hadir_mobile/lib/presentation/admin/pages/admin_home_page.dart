@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../core/network/dio_client.dart';
 import '../../../data/datasources/admin_remote_datasource.dart';
 import '../../../data/repositories/auth_repository.dart';
@@ -70,7 +71,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
           Container(
             color: Colors.white,
             padding: const EdgeInsets.only(top: 2, bottom: 5),
-            child: Text('copyright Imam Nur v.01', textAlign: TextAlign.center, style: TextStyle(fontSize: 9, color: Colors.grey[400])),
+            child: Text(AppStrings.copyright, textAlign: TextAlign.center, style: TextStyle(fontSize: 9, color: Colors.grey[400])),
           ),
         ],
       ),

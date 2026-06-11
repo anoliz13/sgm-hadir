@@ -21,8 +21,8 @@ class AttendanceRepository {
     return await remoteDataSource.getTodayStatus();
   }
 
-  Future<List<dynamic>> getMyHistory() async {
-    return await remoteDataSource.getMyHistory();
+  Future<List<dynamic>> getMyHistory({int days = 30}) async {
+    return await remoteDataSource.getMyHistory(days: days);
   }
 
   Future<Map<String, dynamic>> getDashboardStats() async {

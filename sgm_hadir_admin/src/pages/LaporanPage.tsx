@@ -58,7 +58,9 @@ export default function LaporanPage() {
   const [showQuick, setShowQuick] = useState(false);
 
   useEffect(() => {
-    api.get("/admin/branches").then(r => setBranches(r.data.data || [])).catch(() => {});
+    const ctrl = new AbortController();
+    api.get("/admin/branches", { signal: ctrl.signal }).then(r => setBranches(r.data.data || [])).catch(() => {});
+    return () => ctrl.abort();
   }, []);
 
   const endpoint: Record<ReportTab, string> = {

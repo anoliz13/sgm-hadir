@@ -157,6 +157,11 @@ func (s *LeaveService) UpdateLeaveStatus(leaveID uuid.UUID, approverID uuid.UUID
 }
 
 func (s *LeaveService) sendLeaveStatusNotification(leave *model.LeaveRequest) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("[PANIC] sendLeaveStatusNotification recovered: %v", r)
+		}
+	}()
 	employee, err := s.userRepo.FindByID(leave.UserID)
 	if err != nil || employee.FCMToken == nil || *employee.FCMToken == "" {
 		return

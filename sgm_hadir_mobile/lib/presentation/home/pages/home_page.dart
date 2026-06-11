@@ -19,6 +19,8 @@ import '../../../data/repositories/auth_repository.dart';
 import '../../../data/repositories/attendance_repository.dart';
 import '../../../data/models/shift_model.dart';
 import '../../../data/datasources/shift_remote_datasource.dart';
+import '../../../core/utils/date_formatter.dart';
+import '../../../core/constants/app_strings.dart';
 
 /// Home Page - Halaman utama dengan tombol CHECK-IN besar
 class HomePage extends StatefulWidget {
@@ -39,6 +41,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   Map<String, dynamic>? _user;
   Map<String, dynamic>? _stats;
   ShiftModel? _shift;
+  List<dynamic>? _recentActivities;
 
   @override
   void initState() {
@@ -81,6 +84,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
           _user = user;
           _stats = stats;
         });
+      }
+      final history = await attendanceRepo.getMyHistory(days: 7);
+      if (mounted) {
+        setState(() => _recentActivities = history);
       }
     } catch (e) {
       // ignore
@@ -165,7 +172,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
             color: Colors.white,
             padding: const EdgeInsets.only(top: 3, bottom: 6),
             child: Text(
-              'copyright Imam Nur v.01',
+              AppStrings.copyright,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 9,
@@ -225,9 +232,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Selamat Pagi! 👋',
-                            style: TextStyle(
+                          Text(
+                            '${DateFormatter.getGreeting()}! 👋',
+                            style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 12,
                             ),
@@ -252,7 +259,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                     ),
                     // Notification bell
                     IconButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Fitur notifikasi segera hadir'),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
                       icon: const Icon(
                         Icons.notifications_outlined,
                         color: Colors.white,
@@ -596,25 +610,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                   ),
                 ),
                 const SizedBox(height: 12),
-                _buildActivityItem(
-                  'Check-in',
-                  'Hari ini, 07:55 WIB',
-                  Icons.login_rounded,
-                  AppColors.success,
-                ),
-                _buildActivityItem(
-                  'Check-out',
-                  'Kemarin, 17:05 WIB',
-                  Icons.logout_rounded,
-                  AppColors.info,
-                ),
-                _buildActivityItem(
-                  'Check-in',
-                  'Kemarin, 08:02 WIB',
-                  Icons.login_rounded,
-                  AppColors.warning,
-                  subtitle: 'Terlambat 2 menit',
-                ),
+                if (_recentActivities != null && _recentActivities!.isNotEmpty)
+                  ...(_recentActivities!.take(3).map(
+                    (item) => _buildActivityItemFromData(item as Map<String, dynamic>),
+                  ))
+                else
+                  _buildActivityItem(
+                    'Belum ada aktivitas',
+                    '-',
+                    Icons.history,
+                    AppColors.textMuted,
+                  ),
               ],
             ),
           ),
@@ -720,6 +726,32 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
         ],
       ),
     );
+  }
+
+  Widget _buildActivityItemFromData(Map<String, dynamic> data) {
+    final type = data['type'] as String? ?? '';
+    final status = data['status'] as String? ?? '';
+    final createdAtStr = data['created_at'] as String? ?? '';
+
+    final isCheckIn = type == 'check_in';
+    final isLate = status == 'late';
+
+    DateTime? createdAt;
+    try {
+      createdAt = DateTime.parse(createdAtStr).toUtc();
+    } catch (_) {}
+
+    final title = isCheckIn ? 'Check-in' : 'Check-out';
+    final timeStr = createdAt != null
+        ? DateFormatter.formatRelative(createdAt)
+        : '-';
+
+    final icon = isCheckIn ? Icons.login_rounded : Icons.logout_rounded;
+    final color = isLate ? AppColors.warning : AppColors.success;
+
+    final subtitle = isLate ? 'Terlambat' : null;
+
+    return _buildActivityItem(title, timeStr, icon, color, subtitle: subtitle);
   }
 
   Widget _buildLeaderboard() {

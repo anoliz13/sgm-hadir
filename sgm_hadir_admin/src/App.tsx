@@ -6,7 +6,7 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./contexts/AuthContext";
-import { useFcmToken } from "./hooks/useFcmToken";
+import ErrorBoundary from "./components/ErrorBoundary";
 import DashboardLayout from "./components/layout/DashboardLayout";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
@@ -57,16 +57,10 @@ function PlaceholderPage({ title, description }: { title: string; description: s
   );
 }
 
-function FcmInitializer() {
-  useFcmToken();
-  return null;
-}
-
 export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <FcmInitializer />
         <Toaster
           position="top-right"
           toastOptions={{
@@ -86,36 +80,38 @@ export default function App() {
           }}
         />
 
-        <Routes>
-          {/* Public route */}
-          <Route path="/login" element={<LoginPage />} />
+        <ErrorBoundary>
+          <Routes>
+            {/* Public route */}
+            <Route path="/login" element={<LoginPage />} />
 
-          {/* Protected routes */}
-          <Route element={<DashboardLayout />}>
-            <Route path="/" element={<DashboardPage />} />
-            <Route path="/recap" element={<AttendanceRecapPage />} />
-            <Route path="/attendance" element={<AttendanceLogPage />} />
-            <Route path="/visits" element={<MarketingVisitPage />} />
-            <Route
-              path="/leave-approval"
-              element={<LeaveApprovalPage />}
-            />
-            <Route
-              path="/overtime-approval"
-              element={<OvertimeApprovalPage />}
-            />
-            <Route path="/employees" element={<EmployeeManagementPage />} />
-            <Route path="/branches" element={<BranchManagementPage />} />
-            <Route path="/shifts" element={<ShiftManagementPage />} />
-            <Route path="/holidays" element={<ShiftManagementPage />} />
-            <Route path="/reports" element={<LaporanPage />} />
-            <Route path="/settings" element={<PengaturanPage />} />
-            <Route path="/roles" element={<RoleManagementPage />} />
-          </Route>
+            {/* Protected routes */}
+            <Route element={<DashboardLayout />}>
+              <Route path="/" element={<DashboardPage />} />
+              <Route path="/recap" element={<AttendanceRecapPage />} />
+              <Route path="/attendance" element={<AttendanceLogPage />} />
+              <Route path="/visits" element={<MarketingVisitPage />} />
+              <Route
+                path="/leave-approval"
+                element={<LeaveApprovalPage />}
+              />
+              <Route
+                path="/overtime-approval"
+                element={<OvertimeApprovalPage />}
+              />
+              <Route path="/employees" element={<EmployeeManagementPage />} />
+              <Route path="/branches" element={<BranchManagementPage />} />
+              <Route path="/shifts" element={<ShiftManagementPage />} />
+              <Route path="/holidays" element={<PlaceholderPage title="Pengaturan Hari Libur" description="Kelola hari libur nasional dan cuti bersama" />} />
+              <Route path="/reports" element={<LaporanPage />} />
+              <Route path="/settings" element={<PengaturanPage />} />
+              <Route path="/roles" element={<RoleManagementPage />} />
+            </Route>
 
-          {/* Catch all */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+            {/* Catch all */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </ErrorBoundary>
       </AuthProvider>
     </BrowserRouter>
   );

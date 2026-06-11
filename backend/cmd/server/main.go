@@ -2,13 +2,12 @@ package main
 
 import (
 	"log"
-	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
 
 	"github.com/sgm/hadir-backend/internal/handler"
@@ -17,15 +16,10 @@ import (
 	"github.com/sgm/hadir-backend/internal/repository"
 	"github.com/sgm/hadir-backend/internal/service"
 	"github.com/sgm/hadir-backend/pkg/fcm"
+	"github.com/sgm/hadir-backend/pkg/goroutine"
 	"github.com/sgm/hadir-backend/pkg/postgres"
 	redis_client "github.com/sgm/hadir-backend/pkg/redis"
 )
-
-var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool {
-		return true // Allow all origins for WebSocket in this demo
-	},
-}
 
 func main() {
 	// Load .env file if exists
@@ -123,7 +117,7 @@ func main() {
 	settingHandler := handler.NewSettingHandler(settingService)
 
 	// Start background notification scheduler
-	go startNotificationScheduler(notificationService)
+	goroutine.Safe(func() { startNotificationScheduler(notificationService) })
 
 	// Setup Gin Router
 	if os.Getenv("GIN_MODE") == "release" {
@@ -135,8 +129,13 @@ func main() {
 	r.Static("/uploads", "./uploads")
 
 	// CORS Setup
+	corsOrigins := os.Getenv("CORS_ORIGINS")
+	allowOrigins := []string{"http://localhost:5173", "http://localhost:3000"}
+	if corsOrigins != "" {
+		allowOrigins = strings.Split(corsOrigins, ",")
+	}
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*"}, // Adjust in production
+		AllowOrigins:     allowOrigins,
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -145,23 +144,7 @@ func main() {
 
 	// WebSocket Endpoint for Real-time Dashboard
 	r.GET("/ws/dashboard", func(c *gin.Context) {
-		ws, err := upgrader.Upgrade(c.Writer, c.Request, nil)
-		if err != nil {
-			log.Println("WebSocket upgrade failed:", err)
-			return
-		}
-		defer ws.Close()
-		
-		log.Println("Admin connected to real-time dashboard WebSocket")
-		
-		for {
-			// Read messages (ping/pong or close)
-			_, _, err := ws.ReadMessage()
-			if err != nil {
-				log.Println("WebSocket closed:", err)
-				break
-			}
-		}
+		handler.HandleWebSocket(c.Writer, c.Request)
 	})
 
 	// API Routes
@@ -319,17 +302,24 @@ func startNotificationScheduler(ns *service.NotificationService) {
 		t := time.Now().In(loc)
 		hour, minute := t.Hour(), t.Minute()
 
-		if hour == 8 && minute == 0 {
-			log.Println("[Scheduler] Sending check-in reminder")
-			go ns.SendCheckInReminder()
-		}
-		if hour == 17 && minute == 0 {
-			log.Println("[Scheduler] Sending check-out reminder")
-			go ns.SendCheckOutReminder()
-		}
-		if hour == 18 && minute == 0 {
-			log.Println("[Scheduler] Running auto check-out for pending employees")
-			go ns.AutoCheckOutAll()
-		}
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					log.Printf("[Scheduler] Panic recovered: %v", r)
+				}
+			}()
+			if hour == 8 && minute == 0 {
+				log.Println("[Scheduler] Sending check-in reminder")
+				ns.SendCheckInReminder()
+			}
+			if hour == 17 && minute == 0 {
+				log.Println("[Scheduler] Sending check-out reminder")
+				ns.SendCheckOutReminder()
+			}
+			if hour == 18 && minute == 0 {
+				log.Println("[Scheduler] Running auto check-out for pending employees")
+				ns.AutoCheckOutAll()
+			}
+		}()
 	}
 }

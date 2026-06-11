@@ -27,14 +27,13 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    // TODO: Implement refresh token logic if needed
-    if (error.response?.status === 401) {
-      // If we get a 401 Unauthorized, the token is invalid or expired
+    if (error.response?.status === 401 && localStorage.getItem('access_token')) {
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
       localStorage.removeItem('user_data');
-      // Redirect to login (handled by AuthContext)
-      window.dispatchEvent(new Event('auth:unauthorized'));
+      if (!window.location.pathname.includes('/login')) {
+        window.dispatchEvent(new Event('auth:unauthorized'));
+      }
     }
     return Promise.reject(error);
   }

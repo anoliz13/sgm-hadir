@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dio/dio.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/api_constants.dart';
+import '../../core/constants/app_strings.dart';
 import '../auth/pages/login_page.dart';
 import '../home/pages/home_page.dart';
 import '../admin/pages/admin_home_page.dart';
@@ -176,9 +177,9 @@ class _SplashPageState extends State<SplashPage>
                           ),
                         ),
                         const SizedBox(height: 14),
-                        const Text(
-                          'Made by Imam Nur V.01 2026',
-                          style: TextStyle(
+                        Text(
+                          '${AppStrings.copyright} 2026',
+                          style: const TextStyle(
                             color: Colors.white54,
                             fontSize: 11,
                             fontWeight: FontWeight.w400,
@@ -192,7 +193,7 @@ class _SplashPageState extends State<SplashPage>
               Padding(
                 padding: const EdgeInsets.only(bottom: 20),
                 child: Text(
-                  'copyright Imam Nur v.01',
+                  AppStrings.copyright,
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.4),
                     fontSize: 10,
